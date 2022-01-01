@@ -61,9 +61,25 @@ app.get('/api/users', async(req, res) => {
 
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
-app.get('/api/users/:_id/logs', (req, res) => {
-  const { username } = req.query;
-  res.json({ user: username, count: 1})
+app.get('/api/users/:_id/logs', async (req, res) => {
+  const { to, limit, from } = req.query;
+  User.findById(req.params._id, (async(err, user) => {
+    if(!user) res.json({ count: 0, log:[] })
+    if(err) console.log(err)
+    let log = await Exercise.find({user: user._id})
+    .select(['date', 'description', 'duration'])
+    log = log.map(({date, description, duration}) => {{
+      date: new Date(date).toDateString(),
+      description,
+      duration
+    }})
+    res.json({
+      _id: user._id,
+      username: user.username,
+      count: log.length(),
+      log
+    })
+  }))
 })
 
 //return the user object with the log array of all the exercises added
@@ -75,7 +91,6 @@ app.get('/api/users/:id/logs', (req, res) => {
 const listener = app.listen(process.env.PORT || 4500, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 })
-
 
 // TEST CASES
 
