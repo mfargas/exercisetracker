@@ -38,23 +38,22 @@ app.post('/api/users', (req, res) => {
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
 app.post('/api/users/:_id/exercises', (req, res) => {
-  const { description, duration, date } = req.body
+  const { userId, description, duration, date } = req.body
   console.log(req.params)
-  const { _id } = req.params
 
   if (!date) date = new Date()
-  let user = User.findById({_id}, (err, data) => {
+  let user = User.findById(userId, (err, data) => {
     if(err) console.log(err)
     console.log(data)
     if(!data) {
-      res.send('Unknown username')
+      res.send('Unknown userId')
     } else {
       const username = data.username
-      const newExercise = new Exercise({ user: _id, username, description, duration: duration, date })
+      const newExercise = new Exercise({ userId, username, description, duration: duration, date })
       newExercise.save((err, data) => {
         if(err) console.log(err)
         res.json({
-          _id: newExercise.user,
+          userId,
           username: user.username,
           date: new Date(newExercise.date).toDateString(),
           duration: newExercise.duration,
@@ -72,23 +71,39 @@ app.get('/api/users', async(req, res) => {
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
 app.get('/api/users/:_id/logs', async (req, res) => {
-  const { to, limit, from } = req.query;
-  User.findById(req.params._id, (async(err, user) => {
+  const { userId, to, limit, from } = req.query;
+  User.findById(userId, (async(err, user) => {
     if(!user) res.json({ count: 0, log:[] })
     if(err) console.log(err)
-    let log = await Exercise.find({user: user._id})
-    .select(['date', 'description', 'duration'])
-    log = log.map(({date, description, duration}) => {{
-      date: new Date(date).toDateString(),
-      description,
-      duration
-    }})
-    res.json({
-      _id: user._id,
-      username: user.username,
-      count: log.length,
-      log
+    await Exercise.find({userId}, {date: {$gte: new Date(from), $lte: new Date(to)}})
+    .select(['id', 'date', 'description', 'duration'])
+    .limit(+limit)
+    .exec((err, data) => {
+      log = log.map(({ date, description, duration }) => {
+        return {
+          date: new Date(date).toDateString(),
+          description: description,
+          duration: duration
+        }
+      })
+      if (err) console.log(err)
+      if(!data){
+        res.json({
+          "userId": userId,
+          "username": user.username,
+          "count": 0,
+          "log": []
+        })
+      }else{
+        res.json({
+          "userId": userId,
+          "username": user.username,
+          "count": data.length,
+          "log": log
+        })
+      }
     })
+    
   }))
 })
 
