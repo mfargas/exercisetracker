@@ -1,14 +1,76 @@
+require('dotenv').config()
 const express = require('express')
 const app = express()
+const bodyParser = require('body-parser')
 const cors = require('cors')
-require('dotenv').config()
+const User = require('./models/user.model')
+const Exercise = require('./models/exercise.model')
+const { Schema } = require("mongoose")
+const mongoose = require('mongoose')
 
 app.use(cors())
+
+mongoose.connect(process.env.DB)
+
+app.use(bodyParser.urlencoded({ extended: false }))
+app.use(bodyParser.json())
+
 app.use(express.static('public'))
+
 app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
-});
+})
 
+// post with form data username, create new user
+app.post('/api/users', (req, res) => {
+  const newUser = new User({ username: req.body.username })
+  newUser.save((err, data)=>{
+    if(err){
+      console.log(err)
+      res.send('Username taken')
+    }else{
+      console.log(data)
+      res.json({ username: data.username, _id: data.id })
+    }
+  })
+})
+
+// form data, if no date is supplied, use todays date
+// res will be user object w the exercise fields added
+app.post('/api/users/:_id/exercises', (req, res) => {
+  const { _id, username, description, duration, date } = req.body
+  if (!date) date = new Date()
+  User.find(_id, (err, data) => {
+    console.log(data)
+    if(!data) {
+      res.send('Unknown username')
+    } else {
+      const username = data.username
+      const newExercise = new Exercise({ _id, description, duration, date })
+      newExercise.save((err, data) => {
+        res.json({ _id, username, description, duration, date })
+      })
+  }})
+})
+
+// get list of all users
+app.get('/api/users', (req, res) => {
+
+  res.json({ Users })
+})
+
+//retrieve a full exercise log of any user
+//return a user oject w a count prop representing the # of exercises logged to the user
+app.get('/api/users/:_id/logs', (req, res) => {
+  const { username } = req.query;
+  res.json({ user: username, count: 1})
+})
+
+//return the user object with the log array of all the exercises added
+app.get('/api/users/:id/logs', (req, res) => {
+  const { username, description, duration, date } = req.body
+  res.json({ user: username, exercises: {description, duration, date} })
+})
 
 const listener = app.listen(process.env.PORT || 4500, () => {
   console.log('Your app is listening on port ' + listener.address().port)
@@ -16,9 +78,6 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 
 
 // TEST CASES
-
-// You should provide your own project, not the example URL.
-
 
 // You can POST to / api / users with form data username to create a new user.
 
