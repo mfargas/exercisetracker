@@ -54,9 +54,9 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 })
 
 // get list of all users
-app.get('/api/users', (req, res) => {
-
-  res.json({ Users })
+app.get('/api/users', async(req, res) => {
+  const users = await User.find().select('_id username')
+  res.json((users))
 })
 
 //retrieve a full exercise log of any user
@@ -78,25 +78,6 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 
 
 // TEST CASES
-
-// You can POST to / api / users with form data username to create a new user.
-
-
-// The returned response from POST / api / users with form data username will be an object with username and _id properties.
-
-
-// You can make a GET request to / api / users to get a list of all users.
-
-
-// The GET request to / api / users returns an array.
-
-
-// Each element in the array returned from GET / api / users is an object literal containing a user's username and _id.
-
-
-// You can POST to / api / users /: _id / exercises with form data description, duration, and optionally date.
-// If no date is supplied, the current date will be used.
-
 
 // The response returned from POST / api / users /: _id / exercises will be the user object with the exercise fields added.
 
