@@ -49,15 +49,15 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       res.send('Unknown userId')
     } else {
       const username = data.username
-      const newExercise = new Exercise({ userId, username, description, duration: duration, date })
+      const newExercise = new Exercise({ userId, username, description, duration, date })
       newExercise.save((err, data) => {
         if(err) console.log(err)
         res.json({
           userId,
-          username: user.username,
-          date: new Date(newExercise.date).toDateString(),
-          duration: newExercise.duration,
-          description: newExercise.description })
+          username: username,
+          date: new Date(date).toDateString(),
+          duration: +duration,
+          description: description })
       })
   }})
 })
@@ -71,7 +71,9 @@ app.get('/api/users', async(req, res) => {
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
 app.get('/api/users/:_id/logs', async (req, res) => {
-  const { userId, to, limit, from } = req.query;
+  const { to, limit, from } = req.query;
+  const userId = req.params._id;
+  
   User.findById(userId, (async(err, user) => {
     if(!user) res.json({ count: 0, log:[] })
     if(err) console.log(err)
@@ -79,12 +81,13 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     .select(['id', 'date', 'description', 'duration'])
     .limit(+limit)
     .exec((err, data) => {
-      log = log.map(({ date, description, duration }) => {
-        return {
+      let log = [data];
+      log = [log].map(({ date, description, duration }) => {
+        return ({
           date: new Date(date).toDateString(),
           description: description,
           duration: duration
-        }
+        })
       })
       if (err) console.log(err)
       if(!data){
@@ -95,6 +98,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
           "log": []
         })
       }else{
+        console.log(data)
         res.json({
           "userId": userId,
           "username": user.username,
