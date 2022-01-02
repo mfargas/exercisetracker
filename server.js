@@ -83,7 +83,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
   const idParam = { "id": req.params._id }
   const userId = idParam.id
   
-  User.findById(userId, (async(err, user) => {
+  User.findById({_id: userId}, (async(err, user) => {
     let query = {
       username: user.username
     }
@@ -129,12 +129,10 @@ app.get('/api/users/:_id/logs', async (req, res) => {
         logged.save((err, data) => {
           if(err) console.log(err)
           res.json({
-            "user":{
               "_id": userId,
               "username": data.username,
               "count": data.count,
               "log": log
-            }
           })
         })
       }
