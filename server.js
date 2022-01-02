@@ -38,7 +38,10 @@ app.post('/api/users', (req, res) => {
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
 app.post('/api/users/:_id/exercises', (req, res) => {
-  const { userId, description, duration, date } = req.body
+  const date  = req.body.date
+  const idParam = { "id": req.params._id}
+  const userId = idParam.id
+
   console.log(req.params)
 
   if (!date) date = new Date()
@@ -48,16 +51,20 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     if(!data) {
       res.send('Unknown userId')
     } else {
-      const username = data.username
-      const newExercise = new Exercise({ userId, username, description, duration, date })
+      const newExercise = new Exercise({
+        "username": data.username, 
+        "description": req.body.description, 
+        "duration": req.body.duration, 
+        "date": new Date(date) })
       newExercise.save((err, data) => {
         if(err) console.log(err)
         res.json({
-          userId,
-          username: username,
-          date: new Date(date).toDateString(),
-          duration: +duration,
-          description: description })
+          "_id": userId,
+          "username": data.username,
+          "description": data.description,
+          "duration": data.duration,
+          "date": new Date(date).toDateString()
+        })
       })
   }})
 })
@@ -71,41 +78,63 @@ app.get('/api/users', async(req, res) => {
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
 app.get('/api/users/:_id/logs', async (req, res) => {
-  const { to, limit, from } = req.query;
-  const userId = req.params._id;
+  const { from, to, limit } = req.query;
+  const idParam = { "id": req.params._id }
+  const userId = idParam.id
   
   User.findById(userId, (async(err, user) => {
+    let query = {
+      username: user.username
+    }
+
+    let limitChecker = (limit) => {
+      let max = 50;
+      if(limit){
+        return limit
+      } else {
+        return max
+      }
+    }
     if(!user) res.json({ count: 0, log:[] })
     if(err) console.log(err)
-    await Exercise.find({userId}, {date: {$gte: new Date(from), $lte: new Date(to)}})
+    await Exercise.find((query), null,  {date: {$gte: new Date(from), $lte: new Date(to)}})
     .select(['id', 'date', 'description', 'duration'])
-    .limit(+limit)
-    .exec((err, data) => {
-      let log = [data];
-      log = [log].map(({ date, description, duration }) => {
-        return ({
-          date: new Date(date).toDateString(),
-          description: description,
-          duration: duration
-        })
-      })
-      if (err) console.log(err)
-      if(!data){
+    .limit(limitChecker(+limit))
+    .exec((err, docs) => {
+      let log = [];
+      if(err){
+        console.log(err)
+      } else if (!docs) {
         res.json({
           "userId": userId,
           "username": user.username,
           "count": 0,
           "log": []
         })
-      }else{
-        console.log(data)
+      } else {
+        let log = docs.map((item) => {
+          return ({
+            "date": new Date(item.date).toDateString(),
+            "description": item.description,
+            "duration": item.duration
+          })
+        })
         res.json({
           "userId": userId,
           "username": user.username,
-          "count": data.length,
+          "count": docs.length,
           "log": log
         })
       }
+      // else{
+      //   console.log(data)
+      //   res.json({
+      //     "userId": userId,
+      //     "username": user.username,
+      //     "count": data.length,
+      //     "log": log
+      //   })
+      // }
     })
     
   }))
