@@ -3,14 +3,17 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
+const Log = require('./models/log.model')
 const User = require('./models/user.model')
 const Exercise = require('./models/exercise.model')
-const { Schema } = require("mongoose")
+const { Schema } = require('mongoose')
 const mongoose = require('mongoose')
 
 app.use(cors())
 
-mongoose.connect(process.env.DB)
+mongoose.connect(process.env.DB, {useNewUrlParser: true, useUnifiedTopology: true}, () =>{
+  console.log('Successfully connected to DB')
+})
 
 app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json())
@@ -41,8 +44,6 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const date  = req.body.date
   const idParam = { "id": req.params._id}
   const userId = idParam.id
-
-  console.log(req.params)
 
   if (!date) date = new Date()
   let user = User.findById(userId, (err, data) => {
@@ -120,11 +121,20 @@ app.get('/api/users/:_id/logs', async (req, res) => {
           })
         })
         console.log(log)
-        res.json({
-          "userId": userId,
+        const logged = new Log({
           "username": user.username,
-          "count": docs.length,
+          "count": log.length,
           "log": log
+        })
+
+        logged.save((err, data) => {
+          if(err) console.log(err)
+          res.json({
+            "userId": userId,
+            "username": data.username,
+            "count": data.count,
+            "log": log
+          })
         })
       }
     })
