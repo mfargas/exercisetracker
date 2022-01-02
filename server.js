@@ -119,6 +119,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
             "duration": item.duration
           })
         })
+        console.log(log)
         res.json({
           "userId": userId,
           "username": user.username,
@@ -126,24 +127,65 @@ app.get('/api/users/:_id/logs', async (req, res) => {
           "log": log
         })
       }
-      // else{
-      //   console.log(data)
-      //   res.json({
-      //     "userId": userId,
-      //     "username": user.username,
-      //     "count": data.length,
-      //     "log": log
-      //   })
-      // }
     })
     
   }))
 })
 
 //return the user object with the log array of all the exercises added
-app.get('/api/users/:id/logs', (req, res) => {
-  const { username, description, duration, date } = req.body
-  res.json({ user: username, exercises: {description, duration, date} })
+app.get('/api/users/:id/logs', async(req, res) => {
+  const { from, to, limit } = req.query;
+  const idParam = { "id": req.params._id }
+  const userId = idParam.id
+
+  User.findById(userId, (async (err, user) => {
+    let query = {
+      username: user.username
+    }
+
+    let limitChecker = (limit) => {
+      let max = 50;
+      if (limit) {
+        return limit
+      } else {
+        return max
+      }
+    }
+    if (!user) res.json({ count: 0, log: [] })
+    if (err) console.log(err)
+    await Exercise.find((query), null, { date: { $gte: new Date(from), $lte: new Date(to) } })
+      .select(['id', 'date', 'description', 'duration'])
+      .limit(limitChecker(+limit))
+      .exec((err, docs) => {
+        let log = [];
+        if (err) {
+          console.log(err)
+        } else if (!docs) {
+          res.json({
+            "userId": userId,
+            "username": user.username,
+            "count": 0,
+            "log": []
+          })
+        } else {
+          let log = docs.map((item) => {
+            return ({
+              "date": new Date(item.date).toDateString(),
+              "description": item.description,
+              "duration": item.duration
+            })
+          })
+          console.log(log)
+          res.json({
+            "userId": userId,
+            "username": user.username,
+            "count": docs.length,
+            "log": log
+          })
+        }
+      })
+
+  }))
 })
 
 const listener = app.listen(process.env.PORT || 4500, () => {
