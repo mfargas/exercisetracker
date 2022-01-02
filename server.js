@@ -126,14 +126,15 @@ app.get('/api/users/:_id/logs', async (req, res) => {
           "count": log.length,
           "log": log
         })
-
         logged.save((err, data) => {
           if(err) console.log(err)
           res.json({
-            "userId": userId,
-            "username": data.username,
-            "count": data.count,
-            "log": log
+            "user":{
+              "_id": userId,
+              "username": data.username,
+              "count": data.count,
+              "log": log
+            }
           })
         })
       }
@@ -153,9 +154,6 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 })
 
 // TEST CASES
-
-// The response returned from POST / api / users /: _id / exercises will be the user object with the exercise fields added.
-
 
 // You can make a GET request to / api / users /: _id / logs to retrieve a full exercise log of any user.
 
