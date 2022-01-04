@@ -78,12 +78,12 @@ app.get('/api/users', async(req, res) => {
 
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
-app.get('/api/users/:_id/logs', async (req, res) => {
+app.get('/api/users/:_id/logs', (req, res) => {
   const { from, to, limit } = req.query;
   const idParam = { "id": req.params._id }
   const userId = idParam.id
   
-  User.findById({_id: userId}, (async(err, user) => {
+  User.findById({_id: userId}, (err, user) => {
     let query = {
       username: user.username
     }
@@ -98,7 +98,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     }
     if(!user) res.json({ count: 0, log:[] })
     if(err) console.log(err)
-    await Exercise.find((query),  {date: {$gte: new Date(from), $lte: new Date(to)}})
+    Exercise.find((query),  {date: {$gte: new Date(from), $lte: new Date(to)}})
     .select(['date', 'description', 'duration'])
     .limit(limitChecker(+limit))
     .exec((err, docs) => {
@@ -138,7 +138,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
       }
     })
     
-  }))
+  })
 })
 
 //return the user object with the log array of all the exercises added
