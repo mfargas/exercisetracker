@@ -102,7 +102,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     .select(['date', 'description', 'duration'])
     .limit(limitChecker(+limit))
     .exec((err, docs) => {
-      let log = [];
+      let logArray = [];
       if(err){
         console.log(err)
       } else if (!docs) {
@@ -113,7 +113,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
           "log": []
         })
       } else {
-        let log = docs.map((item) => {
+        let logArray = docs.map((item) => {
           return ({
             "date": item.date.toDateString(),
             "description": item.description,
@@ -121,12 +121,12 @@ app.get('/api/users/:_id/logs', async (req, res) => {
           })
         })
         console.log(log)
-        const logged = new Log({
+        const newLog = new Log({
           "username": user.username,
-          "count": log.length,
-          "log": log
+          "count": 0,
+          "log": logArray
         })
-        logged.save((err, data) => {
+        newLog.save((err, data) => {
           if(err) console.log(err)
           res.json({
               "_id": userId,

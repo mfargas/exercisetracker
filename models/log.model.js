@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const log = new mongoose.Schema(
+const logSchema = new mongoose.Schema(
     {
         "username": String,
         "count": Number,
@@ -8,4 +8,4 @@ const log = new mongoose.Schema(
     }
 );
 
-const Log = module.exports = mongoose.model('Log', log);
+const Log = module.exports = mongoose.model('Log', logSchema);
