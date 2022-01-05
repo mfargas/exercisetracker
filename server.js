@@ -46,7 +46,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const userId = idParam.id
 
   if (!date) date = new Date()
-  let user = User.findById(userId, (err, data) => {
+  User.findByIdAndUpdate(userId,(err, data) => {
     if(err) console.log(err)
     console.log(data)
     if(!data) {
@@ -61,9 +61,9 @@ app.post('/api/users/:_id/exercises', (req, res) => {
         if(err) console.log(err)
         res.json({
           "_id": userId,
-          "username": data.username,
-          "description": data.description,
-          "duration": data.duration,
+          "username": newExercise.username,
+          "description": newExercise.description,
+          "duration": newExercise.duration,
           "date": new Date(date).toDateString()
         })
       })
@@ -83,7 +83,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
   const idParam = { "id": req.params._id }
   const userId = idParam.id
   
-  User.findById(userId, (err, user) => {
+  User.findById(userId, async(err, user) => {
     let query = {
       username: user.username
     }
@@ -98,44 +98,45 @@ app.get('/api/users/:_id/logs', (req, res) => {
     }
     if(!user) res.json({ username: null, count: 0, log:[] })
     if(err) console.log(err)
-    Exercise.find((query), null, { $limit: limitChecker(+limit), date: {$gte: new Date(from), $lte: new Date(to)}}, (err, docs) => {
-      let userExercises = docs
-      let logArray = [];
-      if(err){
-        console.log(err)
-      } else if (!docs) {
-        res.json({
-          "userId": userId,
-          "username": user.username,
-          "count": 0,
-          "log": []
-        })
-      } else {
-        let logArray = userExercises.map((item) => {
-          return ({
-            "description": item.description,
-            "duration": item.duration,
-            "date": item.date
+    await Exercise.find((query), { date: { $gte: new Date(from), $lte: new Date(to) } })
+      .select(['date', 'description', 'duration'])
+      .limit(limitChecker(+limit))
+      .exec((err, docs) => {
+        let log = [];
+        if (err) {
+          console.log(err)
+        } else if (!docs) {
+          res.json({
+            "userId": userId,
+            "username": user.username,
+            "count": 0,
+            "log": []
           })
-        })
-        const newLog = new Log({
-          "user": user.username,
-          "count": logArray.length,
-          "log": [...logArray]
-        })
-        newLog.save((err, data) => {
-          if(err) console.log(err)
-          // res.json({
-          //   "username": data.username,
-          //   "count": Number(data.count),
-          //   "log": data.log
-          // })
-          console.log(user)
-          console.log(newLog)
-        })
-        res.json({user: newLog })
-      }
-    })
+        } else {
+          let log = docs.map((item) => {
+            return ({
+              "date": item.date,
+              "description": item.description,
+              "duration": item.duration
+            })
+          })
+          console.log(log)
+          const logged = new Log({
+            "username": user.username,
+            "count": log.length,
+            "log": log
+          })
+          logged.save((err, data) => {
+            if (err) console.log(err)
+            res.json({
+              "_id": userId,
+              "username": data.username,
+              "count": data.count,
+              "log": log
+            })
+          })
+        }
+      })
   })
 })
 
