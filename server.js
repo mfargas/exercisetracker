@@ -120,20 +120,15 @@ app.get('/api/users/:_id/logs', (req, res) => {
             "duration": item.duration
           })
         })
-        console.log(log)
+        console.log(logArray)
         const newLog = new Log({
           "username": user.username,
-          "count": 0,
+          "count": logArray.length,
           "log": logArray
         })
         newLog.save((err, data) => {
           if(err) console.log(err)
-          res.json({
-              "_id": userId,
-              "username": data.username,
-              "count": data.count,
-              "log": log
-          })
+          res.send({newLog})
         })
       }
     })
