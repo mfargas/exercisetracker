@@ -89,7 +89,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
     }
 
     let limitChecker = (limit) => {
-      let max = 50;
+      let max = 100;
       if(limit){
         return limit
       } else {
@@ -98,7 +98,8 @@ app.get('/api/users/:_id/logs', (req, res) => {
     }
     if(!user) res.json({ username: null, count: 0, log:[] })
     if(err) console.log(err)
-    Exercise.find((query), null, { limit: limitChecker(+limit), date: {$gte: new Date(from), $lte: new Date(to)}}, (err, docs) => {
+    Exercise.find((query), null, { $limit: limitChecker(+limit), date: {$gte: new Date(from), $lte: new Date(to)}}, (err, docs) => {
+      let userExercises = docs
       let logArray = [];
       if(err){
         console.log(err)
@@ -110,7 +111,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
           "log": []
         })
       } else {
-        let logArray = docs.map((item) => {
+        let logArray = userExercises.map((item) => {
           return ({
             "description": item.description,
             "duration": item.duration,
@@ -130,8 +131,9 @@ app.get('/api/users/:_id/logs', (req, res) => {
           //   "log": data.log
           // })
           console.log(user)
+          console.log(newLog)
         })
-        res.json({ user, count: newLog.count, log: newLog.log })
+        res.json({user: newLog })
       }
     })
   })
