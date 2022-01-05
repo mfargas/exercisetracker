@@ -128,7 +128,11 @@ app.get('/api/users/:_id/logs', (req, res) => {
         })
         newLog.save((err, data) => {
           if(err) console.log(err)
-          res.send({newLog})
+          res.json({
+            "username": data.username,
+            "count": Number(data.count),
+            "log": data.log
+          })
         })
       }
     })
