@@ -96,7 +96,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
         return max
       }
     }
-    if(!user) res.json({ count: 0, log:[] })
+    if(!user) res.json({ username: null, count: 0, log:[] })
     if(err) console.log(err)
     Exercise.find((query), null, { limit: limitChecker(+limit), date: {$gte: new Date(from), $lte: new Date(to)}}, (err, docs) => {
       let logArray = [];
@@ -112,37 +112,36 @@ app.get('/api/users/:_id/logs', (req, res) => {
       } else {
         let logArray = docs.map((item) => {
           return ({
-            "date": item.date.toDateString(),
             "description": item.description,
-            "duration": item.duration
+            "duration": item.duration,
+            "date": item.date
           })
         })
         const newLog = new Log({
-          "username": user.username,
+          "user": user.username,
           "count": logArray.length,
-          "log": logArray
+          "log": [...logArray]
         })
         newLog.save((err, data) => {
           if(err) console.log(err)
-          res.json({
-            "_id": userId,
-            "username": data.username,
-            "count": Number(data.count),
-            "log": data.log
-          })
+          // res.json({
+          //   "username": data.username,
+          //   "count": Number(data.count),
+          //   "log": data.log
+          // })
           console.log(user)
         })
+        res.json({ user, count: newLog.count, log: newLog.log })
       }
     })
-    
   })
 })
 
 //return the user object with the log array of all the exercises added
-app.get('/api/users/:id/logs', (req, res) => {
-  const { username, description, duration, date } = req.body
-  res.json({ user: username, exercises: {description, duration, date} })
-})
+// app.get('/api/users/:id/logs', (req, res) => {
+//   const { username, description, duration, date } = req.body
+//   res.json({ user: username, exercises: {description, duration, date} })
+// })
 
 const listener = app.listen(process.env.PORT || 4500, () => {
   console.log('Your app is listening on port ' + listener.address().port)
