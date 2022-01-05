@@ -83,7 +83,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
   const idParam = { "id": req.params._id }
   const userId = idParam.id
   
-  User.findById({_id: userId}, (err, user) => {
+  User.findById(userId, (err, user) => {
     let query = {
       username: user.username
     }
@@ -98,10 +98,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
     }
     if(!user) res.json({ count: 0, log:[] })
     if(err) console.log(err)
-    Exercise.find((query),  {date: {$gte: new Date(from), $lte: new Date(to)}})
-    .select(['date', 'description', 'duration'])
-    .limit(limitChecker(+limit))
-    .exec((err, docs) => {
+    Exercise.find((query), null, { limit: limitChecker(+limit), date: {$gte: new Date(from), $lte: new Date(to)}}, (err, docs) => {
       let logArray = [];
       if(err){
         console.log(err)
@@ -120,7 +117,6 @@ app.get('/api/users/:_id/logs', (req, res) => {
             "duration": item.duration
           })
         })
-        console.log(logArray)
         const newLog = new Log({
           "username": user.username,
           "count": logArray.length,
@@ -129,10 +125,12 @@ app.get('/api/users/:_id/logs', (req, res) => {
         newLog.save((err, data) => {
           if(err) console.log(err)
           res.json({
+            "_id": userId,
             "username": data.username,
             "count": Number(data.count),
             "log": data.log
           })
+          console.log(user)
         })
       }
     })
