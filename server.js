@@ -80,12 +80,12 @@ app.get('/api/users', async(req, res) => {
 
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
-app.get('/api/users/:_id/logs', (req, res) => {
+app.get('/api/users/:_id/logs', async(req, res) => {
   const { from, to, limit } = req.query;
   const idParam = { "id": req.params._id }
   const userId = idParam.id
 
-  User.findById(userId, (err, user) => {
+  await User.findById(userId, (err, user) => {
     let query = {
       username: user.username
     }
