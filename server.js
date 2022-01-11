@@ -80,7 +80,7 @@ app.get('/api/users', async(req, res) => {
 
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
-app.get('/api/users/:id/logs', async (req, res) => {
+app.get('/api/users/:id/logs', (req, res) => {
   const { from, to, limit } = req.query;
   const idParam = { "id": req.params._id }
   const userId = idParam.id
@@ -105,7 +105,7 @@ app.get('/api/users/:id/logs', async (req, res) => {
         query.date = dateObj
       }
       let validLimit = limit ?? 100
-      await Exercise.find((query)).limit(+validLimit).exec((err, docs) => {
+      Exercise.find((query)).limit(+validLimit).exec((err, docs) => {
         let log = [];
         if (err) {
           console.log(err)
