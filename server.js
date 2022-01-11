@@ -3,7 +3,6 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const Log = require('./models/log.model')
 const User = require('./models/user.model')
 const Exercise = require('./models/exercise.model')
 const { Schema } = require('mongoose')
@@ -33,7 +32,7 @@ app.post('/api/users', (req, res) => {
       res.send('Username taken')
     }else{
       console.log(data)
-      res.json({ username: data.username, _id: data.id })
+      res.json(data)
     }
   })
 })
@@ -41,30 +40,33 @@ app.post('/api/users', (req, res) => {
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
 app.post('/api/users/:_id/exercises', (req, res) => {
-  const date  = req.body.date
+  const {description, duration, date} = req.body
   const idParam = { "id": req.params._id}
   const userId = idParam.id
 
   if (!date) date = new Date()
-  User.findByIdAndUpdate(userId,(err, data) => {
+  User.findById(userId,(err, userData) => {
     if(err) console.log(err)
-    console.log(data)
-    if(!data) {
+    console.log(userData)
+    if (!userData) {
       res.send('Unknown userId')
     } else {
       const newExercise = new Exercise({
-        "username": data.username, 
-        "description": req.body.description, 
-        "duration": req.body.duration, 
-        "date": new Date(date) })
+        userID: userId, 
+        description,
+        duration, 
+        date: new Date(date).toDateString(), 
+      })
+      console.log(newExercise)
       newExercise.save((err, data) => {
         if(err) console.log(err)
+        const { description, duration, date, _id } = data
         res.json({
-          "_id": userId,
-          "username": newExercise.username,
-          "description": newExercise.description,
-          "duration": newExercise.duration,
-          "date": new Date(date).toDateString()
+          username: userData.username,
+          description,
+          duration,
+          date,
+          _id: userData.id
         })
       })
   }})
@@ -83,25 +85,27 @@ app.get('/api/users/:_id/logs', (req, res) => {
   const idParam = { "id": req.params._id }
   const userId = idParam.id
   
-  User.findById(userId, async(err, user) => {
+  User.findById(userId, (err, user) => {
     let query = {
       username: user.username
     }
 
-    let limitChecker = (limit) => {
-      let max = 100;
-      if(limit){
-        return limit
-      } else {
-        return max
+    if (err || !user) { 
+      console.log(err)
+      res.json({ username: null, count: 0, log: [] }) 
+    } else { 
+      let dateObj = {};
+      if(from){
+        dateObj["$gte"] = new Date(from).toDateString()
       }
-    }
-    if(!user) res.json({ username: null, count: 0, log:[] })
-    if(err) console.log(err)
-    await Exercise.find((query), { date: { $gte: new Date(from), $lte: new Date(to) } })
-      .select(['date', 'description', 'duration'])
-      .limit(limitChecker(+limit))
-      .exec((err, docs) => {
+      if(to){
+        dateObj["$lte"] = new Date(to).toDateString()
+      }
+      if(from || to){
+        query.date = dateObj
+      }
+      let validLimit = limit ?? 100
+      Exercise.find((query)).limit(+validLimit).exec((err, docs) => {
         let log = [];
         if (err) {
           console.log(err)
@@ -113,38 +117,22 @@ app.get('/api/users/:_id/logs', (req, res) => {
             "log": []
           })
         } else {
-          let log = docs.map((item) => {
-            return ({
-              "date": item.date,
-              "description": item.description,
-              "duration": item.duration
-            })
-          })
-          console.log(log)
-          const logged = new Log({
-            "username": user.username,
-            "count": log.length,
-            "log": log
-          })
-          logged.save((err, data) => {
-            if (err) console.log(err)
-            res.json({
-              "_id": userId,
-              "username": data.username,
-              "count": data.count,
-              "log": log
-            })
-          })
+          const docData = docs
+          let count = docs.length
+          const { username , _id } = user
+          const log = docData.map((item) => ({
+              description: item.description,
+              duration: item.duration,
+              date: item.date
+          }))
+          res.json({username, count, _id, log})
         }
       })
+    }
   })
 })
 
 //return the user object with the log array of all the exercises added
-// app.get('/api/users/:id/logs', (req, res) => {
-//   const { username, description, duration, date } = req.body
-//   res.json({ user: username, exercises: {description, duration, date} })
-// })
 
 const listener = app.listen(process.env.PORT || 4500, () => {
   console.log('Your app is listening on port ' + listener.address().port)

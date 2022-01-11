@@ -3,7 +3,37 @@
 *A freecodecamp challenge completed by Marjoree E. F. as part of the Backend and APIs Course*
 
 ## Objective
-The goal of this project is to create a backend-driven exercise tracker app that creates new users and retrieves existing profiles. These are the specific test-cases being checked for:
+The goal of this project is to create a backend-driven exercise tracker app that creates new users and retrieves existing profiles. 
+Responses should have the following structures:
+
+**Exercise:**
+`{
+  username: "fcc_test"
+  description: "test",
+  duration: 60,
+  date: "Mon Jan 01 1990",
+  _id: "5fb5853f734231456ccb3b05"
+}`
+
+**User:**
+`{
+  username: "fcc_test",
+  _id: "5fb5853f734231456ccb3b05"
+}`
+**Log:**
+`{
+  username: "fcc_test",
+  count: 1,
+  _id: "5fb5853f734231456ccb3b05",
+  log: [{
+    description: "test",
+    duration: 60,
+    date: "Mon Jan 01 1990",
+  }]
+}`
+*Hint: For the date property, the toDateString method of the Date API can be used to achieve the expected output.*
+
+## Test Cases
 <br>
 1. You should provide your own project, not the example URL. ✅
 2. You can POST to / api / users with form data username to create a new user. ✅
