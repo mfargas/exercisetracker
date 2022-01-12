@@ -40,18 +40,18 @@ app.post('/api/users', (req, res) => {
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
 app.post('/api/users/:_id/exercises', (req, res) => {
-  const {description, duration, date} = req.body
+  const {description, duration} = req.body
   const idParam = { "id": req.params._id}
   const userId = idParam.id
-
-  if (!date) date = new Date()
+  const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
   User.findById(userId,(err, userData) => {
-    if(err) console.log(err)
-    console.log(userData)
-    if (!userData) {
+    if (err || !userData) {
       res.send('Unknown userId')
+      console.log(err)
+      console.log(userData)
     } else {
       const newExercise = new Exercise({
+        username: userData.username,
         userID: userId, 
         description,
         duration, 
@@ -60,13 +60,13 @@ app.post('/api/users/:_id/exercises', (req, res) => {
       console.log(newExercise)
       newExercise.save((err, data) => {
         if(err) console.log(err)
-        const { description, duration, date, _id } = data
+        const { username, description, duration, date, _id } = data
         res.json({
-          username: userData.username,
+          username,
           description,
           duration,
           date,
-          _id: userData.id
+          _id: _id
         })
       })
   }})
@@ -80,7 +80,7 @@ app.get('/api/users', async(req, res) => {
 
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
-app.get('/api/users/:_id/logs', (req, res) => {
+app.get('/api/users/:_id?/logs', (req, res) => {
   const { from, to, limit } = req.query
   const {_id} = req.params
   User.findById(_id, (err, user) => {
@@ -92,6 +92,9 @@ app.get('/api/users/:_id/logs', (req, res) => {
       console.log(err)
       res.json({ username: null, count: 0, log: [] })
     } else {
+      let query = {
+        userId: user._id
+      }
       let dateObj = {};
       if (from) {
         dateObj["$gte"] = new Date(from).toDateString()
@@ -100,7 +103,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
         dateObj["$lte"] = new Date(to).toDateString()
       }
       if (from || to) {
-        query.date = dateObj
+        query.fdate = dateObj
       }
       let validLimit = limit ?? 100
       Exercise.find((query)).limit(+validLimit).exec((err, docs) => {
@@ -126,7 +129,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
               date: itemDate
             })
           })
-          res.json({ username, count, _id, log })
+          res.send({ username, count, _id, log })
         }
       })
     }
