@@ -142,7 +142,7 @@ app.get('/api/users/:_id/logs', (req, res) => {
             })
           })
           console.log(log)
-          res.send({ username, count, _id, log })
+          res.send({ user: { username, count, _id, log }})
         }
       })
     }
@@ -171,6 +171,14 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 
 // The date property of any object in the log array that is returned from GET / api / users /: id / logs should be a string..
 // Use the dateString format of the Date API.
+
+
+
+
+
+
+
+
 
 
 // You can add from, to and limit parameters to a GET / api / users /: _id / logs request to retrieve part of the log of 
