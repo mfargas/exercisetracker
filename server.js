@@ -62,13 +62,25 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           console.log(err)
         } else {
           const { description, duration, date } = data
-          res.json({
-            username: userData.username,
-            description,
-            duration,
-            date,
-            userID: userId
+          console.log(userData)
+          res.send({
+            user:{
+              username: userData.username,
+              userID: userId,
+              exercise: [{
+                description,
+                duration,
+                date
+              }]
+            }
           })
+          // res.json({
+          //   username: userData.username,
+          //   description,
+          //   duration,
+          //   date,
+          //   userID: userId
+          // })
         }
       })
   }})
@@ -137,58 +149,6 @@ app.get('/api/users/:_id/logs', (req, res) => {
   })
 })
 
-// app.get('/api/users/:id/logs', (req, res) => {
-//   const { from, to, limit } = req.query;
-//   const {id} = req.params
-//   User.findById(id, (err, user) => {
-//     let query = {
-//       username: user.username
-//     }
-
-//     if (err || !user) { 
-//       console.log(err)
-//       res.json({ username: null, count: 0, log: [] }) 
-//     } else { 
-//       let dateObj = {};
-//       if(from){
-//         dateObj["$gte"] = new Date(from).toDateString()
-//       }
-//       if(to){
-//         dateObj["$lte"] = new Date(to).toDateString()
-//       }
-//       if(from || to){
-//         query.date = dateObj
-//       }
-//       let validLimit = limit ?? 100
-//       Exercise.find((query)).limit(+validLimit).exec((err, docs) => {
-//         let log = [];
-//         if (err) {
-//           console.log(err)
-//         } else if (!docs) {
-//           res.json({
-//             "userId": userId,
-//             "username": user.username,
-//             "count": 0,
-//             "log": []
-//           })
-//         } else {
-//           const docData = docs
-//           let count = docs.length
-//           const { username , _id } = user
-//           const log = docData.map((item) => {
-//             itemDate = new Date(item.date).toDateString()
-//             return ({
-//               description: item.description,
-//               duration: item.duration,
-//               date: itemDate
-//           })})
-//           res.json({username, count, _id, log})
-//         }
-//       })
-//     }
-//   })
-// })
-
 //return the user object with the log array of all the exercises added
 
 const listener = app.listen(process.env.PORT || 4500, () => {
@@ -197,18 +157,10 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 
 // TEST CASES
 
-// You can make a GET request to / api / users /: _id / logs to retrieve a full exercise log of any user.
-
-
-// A request to a user's log GET /api/users/:_id/logs returns a user object with a count property representing the number 
-// of exercises that belong to that user.
+// The response returned from POST / api / users /: _id / exercises will be the user object with the exercise fields added
 
 
 // A GET request to / api / users /: id / logs will return the user object with a log array of all the exercises added.
-
-
-// Each item in the log array that is returned from GET / api / users /: id / logs is an object that should have a description, 
-// duration, and date properties.
 
 
 // The description property of any object in the log array that is returned from GET / api / users /: id / logs should be a string.
