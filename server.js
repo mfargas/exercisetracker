@@ -40,18 +40,18 @@ app.post('/api/users', (req, res) => {
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
 app.post('/api/users/:_id/exercises', (req, res) => {
-  const {description, duration} = req.body
-  const queryId = {"id": req.params}
-  const idParam = queryId.id
+  const { description, duration } = req.body
+  const idParam = { "id": req.params._id }
+  const userId = idParam.id
   const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
-  User.findById(idParam,(err, userData) => {
+  User.findById(userId,(err, userData) => {
     if (err || !userData) {
       res.send('Unknown userId')
       console.log(err)
       console.log(userData)
     } else {
       const newExercise = new Exercise({
-        userID: idParam, 
+        userID: userId, 
         description,
         duration, 
         date: new Date(date).toDateString(), 
@@ -67,7 +67,7 @@ app.post('/api/users/:_id/exercises', (req, res) => {
             description,
             duration,
             date,
-            userId: idParam
+            userID: userId
           })
         }
       })
