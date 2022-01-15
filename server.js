@@ -67,20 +67,17 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           resObj['id'] = userId
           let l = userData.exercises.push(resObj)
           userData.save().then(userData => {
-            res.status(200).json(userData)
+            res.status(200).send({
+              username: userData.username,
+              userID: userId,
+              exercise: newExercise
+          })
           })
           // res.send(resObj)
           // res.send({
           //     username: userData.username,
           //     userID: userId,
           //     exercise: {newExercise}
-          // })
-          // res.json({
-          //   username: userData.username,
-          //   description,
-          //   duration,
-          //   date,
-          //   userID: userId
           // })
       })
     }})
