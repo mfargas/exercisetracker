@@ -44,36 +44,37 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const idParam = { "id": req.params._id }
   const userId = idParam.id
   const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
-  User.findById(userId,(err, userData) => {
-    if (err || !userData) {
+  User.findById(userId).exec().then(userData => {
+    if (!userData) {
       res.send('Unknown userId')
-      console.log(err)
       console.log(userData)
     } else {
       const newExercise = new Exercise({
-        userID: userId, 
+        userID: userId,
         description,
-        duration, 
-        date: new Date(date).toDateString(), 
+        duration,
+        date: new Date(date).toDateString(),
       })
       console.log(newExercise)
-      newExercise.save((err, data) => {
-        if(err){
-          console.log(err)
-        } else {
+      newExercise.save().then(data => {
           const { description, duration, date } = data
           console.log(userData)
-          res.send({
-            user:{
-              username: userData.username,
-              userID: userId,
-              exercise: [{
-                description,
-                duration,
-                date
-              }]
-            }
+          let resObj = {}
+          resObj['username'] = userData.username
+          resObj['description'] = description
+          resObj['duration'] = duration
+          resObj['date'] = date
+          resObj['id'] = userId
+          let l = userData.exercises.push(resObj)
+          userData.save().then(userData => {
+            res.status(200).json(userData)
           })
+          // res.send(resObj)
+          // res.send({
+          //     username: userData.username,
+          //     userID: userId,
+          //     exercise: {newExercise}
+          // })
           // res.json({
           //   username: userData.username,
           //   description,
@@ -81,9 +82,8 @@ app.post('/api/users/:_id/exercises', (req, res) => {
           //   date,
           //   userID: userId
           // })
-        }
       })
-  }})
+    }})
 })
 
 // get list of all users
@@ -182,4 +182,4 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 
 
 // You can add from, to and limit parameters to a GET / api / users /: _id / logs request to retrieve part of the log of 
-// any user.from and to are dates in yyyy - mm - dd format.limit is an integer of how many logs to send back.
+// any user.from and to are dates in yyyy - mm - dd format.limit is an integer of how many logs to send back
