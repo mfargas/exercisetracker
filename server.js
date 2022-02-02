@@ -3,8 +3,8 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const User = require('./models/user.model')
-const Exercise = require('./models/exercise.model')
+const User = require('./js/userSchema')
+const { addNewUser, getAllUsers, addNewExercise, fetchExercises} = require('./js/fun')
 const { Schema } = require('mongoose')
 const mongoose = require('mongoose')
 
@@ -24,126 +24,79 @@ app.get('/', (req, res) => {
 })
 
 // post with form data username, create new user
-app.post('/api/users', (req, res) => {
-  const newUser = new User({ username: req.body.username })
-  newUser.save((err, data)=>{
-    if(err){
-      console.log(err)
-      res.send('Username taken')
-    }else{
-      console.log(data)
-      res.json(data)
+app.post('/api/users', async (req, res, next) => {
+  const userName = req.body.username;
+  if(!userName || userName === 0 ){
+    return res.json({error: 'Invalid username'})
+  } else {
+    try{
+      const newUser = await addNewUser(userName);
+      console.log(newUser)
+      res.json({
+        username: newUser.username,
+        _id: newUser._id
+      })
+    } catch(err){
+      console.error(err)
     }
-  })
+  }
+})
+
+// get list of all users
+app.get('/api/users', async(req, res, next) => {
+  const users = await getAllUsers()
+  res.json(users)
 })
 
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
-app.post('/api/users/:_id/exercises', (req, res) => {
-  const { description, duration } = req.body
-  const idParam = { "id": req.params._id }
-  const userId = idParam.id
+app.post('/api/users/:_id/exercises', async (req, res, next) => {
+  const userID = req.params._id || req.body._id
   const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
-  User.findById(userId).exec().then(userData => {
-    if (!userData) {
-      res.send('Unknown userId')
-      console.log(userData)
-    } else {
-      const newExercise = new Exercise({
-        userID: userId,
-        description,
-        duration,
-        date: new Date(date).toDateString(),
-      })
-      console.log(newExercise)
-      newExercise.save().then(data => {
-          const { description, duration, date } = data
-          console.log(userData)
-          let resObj = {}
-          resObj['username'] = userData.username
-          resObj['description'] = description
-          resObj['duration'] = duration
-          resObj['date'] = date
-          resObj['id'] = userId
-          let l = userData.exercises.push(resObj)
-          userData.save().then(userData => {
-            res.status(200).send({
-              username: userData.username,
-              userID: userId,
-              exercise: newExercise
-          })
-          })
-          // res.send(resObj)
-          // res.send({
-          //     username: userData.username,
-          //     userID: userId,
-          //     exercise: {newExercise}
-          // })
-      })
-    }})
-})
-
-// get list of all users
-app.get('/api/users', async(req, res) => {
-  const users = await User.find().select('_id username')
-  res.json((users))
+  try{
+    const addNE = await addNewExercise(
+      {
+        id: userID,
+        description: req.body.description,
+        duration: req.body.duration,
+        date: date
+      }
+    )
+    if(addNE){
+      res.json(addNE)
+    } else{
+      console.log(addNE)
+      res.end()
+    }
+  }catch(err){
+    console.log(err)
+    throw new Error('Could not add exercise')
+  }
 })
 
 //retrieve a full exercise log of any user
 //return a user oject w a count prop representing the # of exercises logged to the user
-app.get('/api/users/:_id/logs', (req, res) => {
-  const { from, to, limit } = req.query
-  const {_id} = req.params
-  User.findById(_id, (err, user) => {
-    if (err || !user) {
-      console.log(err)
-      res.json({ username: null, count: 0, log: [] })
-    } else {
-      console.log(user)
-      let filter = {
-        userId: user.id
-      }
-      let dateObj = {};
-      if (from) {
-        dateObj["$gte"] = new Date(from).toDateString()
-      }
-      if (to) {
-        dateObj["$lte"] = new Date(to).toDateString()
-      }
-      if (from || to) {
-        filter.date = dateObj
-      }
-      let validLimit = limit ?? 100
-      Exercise.find((filter)).limit(+validLimit).exec((err, docs) => {
-        let log = [];
-        if (err) {
-          console.log(err)
-        } else if (!docs) {
-          res.json({
-            "userId": userId,
-            "username": user.username,
-            "count": 0,
-            "log": []
-          })
-        } else {
-          console.log(docs)
-          const docData = docs
-          let count = docs.length
-          const { username, _id } = user
-          const log = docData.map((item) => {
-            itemDate = new Date(item.date).toDateString()
-            return ({
-              description: item.description,
-              duration: item.duration,
-              date: itemDate
-            })
-          })
-          console.log(log)
-          res.send({ user: { username, count, _id, log }})
-        }
-      })
+app.get('/api/users/:_id/logs', async (req, res, next) => {
+  const userId = req.params["_id"];
+  const { from, to, limit } = req.query;
+  const obj = {
+    userId: userId,
+    fromDate: from,
+    toDate: to,
+    limit: limit
+  }
+  try{
+    const exerciseLog = await fetchExercises(obj)
+    if(exerciseLog){
+      res.json(exerciseLog)
+    } else{
+      console.log(exerciseLog)
+      res.end()
     }
-  })
+  } catch(err){
+    console.log(err)
+    throw new Error('Could not.....')
+  }
 })
 
 //return the user object with the log array of all the exercises added
@@ -180,3 +133,97 @@ const listener = app.listen(process.env.PORT || 4500, () => {
 
 // You can add from, to and limit parameters to a GET / api / users /: _id / logs request to retrieve part of the log of 
 // any user.from and to are dates in yyyy - mm - dd format.limit is an integer of how many logs to send back
+
+
+// const { description, duration } = req.body
+// const idParam = { "id": req.params._id }
+// const userId = idParam.id
+// const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
+// User.findById(userId).exec().then(userData => {
+//   if (!userData) {
+//     res.send('Unknown userId')
+//     console.log(userData)
+//   } else {
+//     const newExercise = new Exercise({
+//       userID: userId,
+//       description,
+//       duration,
+//       date: new Date(date).toDateString(),
+//     })
+//     console.log(newExercise)
+//     newExercise.save().then(data => {
+//       const { description, duration, date } = data
+//       console.log(userData)
+//       let resObj = {}
+//       resObj['username'] = userData.username
+//       resObj['description'] = description
+//       resObj['duration'] = duration
+//       resObj['date'] = date
+//       resObj['id'] = userId
+//       let l = userData.exercises.push(resObj)
+//       userData.save().then(userData => {
+//         res.status(200).send({
+//           username: userData.username,
+//           userID: userId,
+//           exercise: newExercise
+//         })
+//       })
+//     })
+//   }
+// })
+
+
+
+// const { from, to, limit } = req.query
+// const idParam = { "id": req.params._id }
+// const idSearch = idParam.id
+
+// User.findById(idSearch, (err, user) => {
+//   if (err || !user) {
+//     console.log(err)
+//     res.json({ username: null, count: 0, log: [] })
+//   } else {
+//     console.log(user)
+//     let filter = {
+//       userId: idSearch
+//     }
+//     let dateObj = {};
+//     if (from) {
+//       dateObj["$gte"] = new Date(from).toDateString()
+//     }
+//     if (to) {
+//       dateObj["$lte"] = new Date(to).toDateString()
+//     }
+//     if (from || to) {
+//       filter.date = dateObj
+//     }
+//     let validLimit = limit ?? 100
+//     User.Exercise.find(filter).limit(+validLimit).exec((err, docs) => {
+//       if (err) {
+//         console.log(err)
+//       } else if (!docs) {
+//         res.json({
+//           "userId": userId,
+//           "username": user.username,
+//           "count": 0,
+//           "log": []
+//         })
+//       } else {
+//         console.log(docs)
+//         const docData = docs
+//         let count = docs.length
+//         const { username, _id } = user
+//         const log = docData.map((item) => {
+//           itemDate = new Date(item.date).toDateString()
+//           return ({
+//             description: item.description,
+//             duration: item.duration,
+//             date: itemDate
+//           })
+//         })
+//         console.log(log)
+//         res.send({ user: { username, count, _id, log } })
+//       }
+//     })
+//   }
+// })
