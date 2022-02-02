@@ -105,7 +105,7 @@ const fetchExercises = async (objRequest) => {
             allExercises = allExercises.map(exercise => ({
                 description: exercise.description,
                 duration: exercise.duration,
-                date: exercise.toDateString()
+                date: exercise.date.toDateString()
             }))
         }
 
