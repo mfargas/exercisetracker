@@ -52,14 +52,20 @@ app.get('/api/users', async(req, res, next) => {
 // res will be user object w the exercise fields added
 app.post('/api/users/:_id/exercises', async (req, res, next) => {
   const userID = req.params._id || req.body._id
-  const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
+  const todaysDate = new Date()
+  const yyyy = todaysDate.getFullYear()
+  const m = todaysDate.getMonth() +1
+  const d = todaysDate.getDate()
+  const dateStr = yyyy + "-" + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
+  const datePart = req.body.date ? req.body.date : dateStr
+  // const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
   try{
     const addNE = await addNewExercise(
       {
         id: userID,
         description: req.body.description,
         duration: req.body.duration,
-        date: date
+        date: datePart
       }
     )
     if(addNE){
