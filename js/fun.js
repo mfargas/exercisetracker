@@ -47,7 +47,7 @@ const addNewExercise = async (exerciseDetails) => {
         const objWNewProps = {
             description: exerciseDetails.description,
             duration: exerciseDetails.duration,
-            date: exerciseDetails.date
+            date: exerciseDetails.date.toDateString()
         }
         const updatedUser = await findAndUpdateUser(exerciseDetails.id, objWNewProps)
         if(updatedUser){
