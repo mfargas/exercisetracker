@@ -69,11 +69,7 @@ app.post('/api/users/:_id/exercises', async (req, res, next) => {
       }
     )
     if(addNE){
-      res.json({user:{
-        username: addNE.username,
-        userId: userID,
-        exercise: addNE
-      }})
+      res.json({ ...addNE })
     } else{
       console.log(addNE)
       res.end()
