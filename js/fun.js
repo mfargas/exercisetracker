@@ -53,10 +53,10 @@ const addNewExercise = async (exerciseDetails) => {
         if(updatedUser){
             const obj = {
                 username: updatedUser.username,
-                _id: updatedUser._id,
                 description: updatedUser.description,
                 duration: updatedUser.duration,
-                date: new Date(exerciseDetails.date).toDateString()
+                date: new Date(exerciseDetails.date).toDateString(),
+                _id: updatedUser._id
             }
             return obj
         }else{

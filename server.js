@@ -64,7 +64,7 @@ app.post('/api/users/:_id/exercises', async (req, res, next) => {
       {
         id: userID,
         description: req.body.description,
-        duration: req.body.duration,
+        duration: +req.body.duration,
         date: datePart
       }
     )
