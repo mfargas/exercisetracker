@@ -50,7 +50,7 @@ app.get('/api/users', async(req, res, next) => {
 
 // form data, if no date is supplied, use todays date
 // res will be user object w the exercise fields added
-app.post('/api/users/:_id/exercises', async (req, res, next) => {
+app.post('/api/users/:_id/exercises', bodyParser.urlencoded({ extended: false }), async (req, res, next) => {
   const userID = req.params._id || req.body._id
   const todaysDate = new Date()
   const yyyy = todaysDate.getFullYear()
