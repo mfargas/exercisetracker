@@ -57,7 +57,7 @@ app.post('/api/users/:_id/exercises', async (req, res, next) => {
   const m = todaysDate.getMonth() +1
   const d = todaysDate.getDate()
   const dateStr = yyyy + "-" + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
-  const datePart = req.body.date ? new Date(req.body.date).toDateString() : new Date(dateStr).toDateString
+  const datePart = req.body.date ? new Date(req.body.date).toDateString() : new Date(dateStr).toDateString()
   // const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
   try{
     const addNE = await addNewExercise(
@@ -111,125 +111,7 @@ const listener = app.listen(process.env.PORT || 4500, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 })
 
-// TEST CASES
-
-// The response returned from POST / api / users /: _id / exercises will be the user object with the exercise fields added
-
-
-// A GET request to / api / users /: id / logs will return the user object with a log array of all the exercises added.
-
-
-// The description property of any object in the log array that is returned from GET / api / users /: id / logs should be a string.
-
-
-// The duration property of any object in the log array that is returned from GET / api / users /: id / logs should be a number.
-
+// TEST CASES LEFT
 
 // The date property of any object in the log array that is returned from GET / api / users /: id / logs should be a string..
 // Use the dateString format of the Date API.
-
-
-
-
-
-
-
-
-
-
-// You can add from, to and limit parameters to a GET / api / users /: _id / logs request to retrieve part of the log of 
-// any user.from and to are dates in yyyy - mm - dd format.limit is an integer of how many logs to send back
-
-
-// const { description, duration } = req.body
-// const idParam = { "id": req.params._id }
-// const userId = idParam.id
-// const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
-// User.findById(userId).exec().then(userData => {
-//   if (!userData) {
-//     res.send('Unknown userId')
-//     console.log(userData)
-//   } else {
-//     const newExercise = new Exercise({
-//       userID: userId,
-//       description,
-//       duration,
-//       date: new Date(date).toDateString(),
-//     })
-//     console.log(newExercise)
-//     newExercise.save().then(data => {
-//       const { description, duration, date } = data
-//       console.log(userData)
-//       let resObj = {}
-//       resObj['username'] = userData.username
-//       resObj['description'] = description
-//       resObj['duration'] = duration
-//       resObj['date'] = date
-//       resObj['id'] = userId
-//       let l = userData.exercises.push(resObj)
-//       userData.save().then(userData => {
-//         res.status(200).send({
-//           username: userData.username,
-//           userID: userId,
-//           exercise: newExercise
-//         })
-//       })
-//     })
-//   }
-// })
-
-
-
-// const { from, to, limit } = req.query
-// const idParam = { "id": req.params._id }
-// const idSearch = idParam.id
-
-// User.findById(idSearch, (err, user) => {
-//   if (err || !user) {
-//     console.log(err)
-//     res.json({ username: null, count: 0, log: [] })
-//   } else {
-//     console.log(user)
-//     let filter = {
-//       userId: idSearch
-//     }
-//     let dateObj = {};
-//     if (from) {
-//       dateObj["$gte"] = new Date(from).toDateString()
-//     }
-//     if (to) {
-//       dateObj["$lte"] = new Date(to).toDateString()
-//     }
-//     if (from || to) {
-//       filter.date = dateObj
-//     }
-//     let validLimit = limit ?? 100
-//     User.Exercise.find(filter).limit(+validLimit).exec((err, docs) => {
-//       if (err) {
-//         console.log(err)
-//       } else if (!docs) {
-//         res.json({
-//           "userId": userId,
-//           "username": user.username,
-//           "count": 0,
-//           "log": []
-//         })
-//       } else {
-//         console.log(docs)
-//         const docData = docs
-//         let count = docs.length
-//         const { username, _id } = user
-//         const log = docData.map((item) => {
-//           itemDate = new Date(item.date).toDateString()
-//           return ({
-//             description: item.description,
-//             duration: item.duration,
-//             date: itemDate
-//           })
-//         })
-//         console.log(log)
-//         res.send({ user: { username, count, _id, log } })
-//       }
-//     })
-//   }
-// })
