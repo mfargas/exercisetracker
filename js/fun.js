@@ -117,7 +117,7 @@ const fetchExercises = async (objRequest) => {
             username: currentUser.username,
             count: allExercises.length,
             _id: objRequest.userId,
-            log: allExercises
+            log: [...allExercises]
         }
 
         return exerciseLogCurrentUser
