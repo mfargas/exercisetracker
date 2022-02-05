@@ -57,7 +57,8 @@ app.post('/api/users/:_id/exercises', async (req, res, next) => {
   const m = todaysDate.getMonth() +1
   const d = todaysDate.getDate()
   const dateStr = yyyy + "-" + (m <= 9 ? '0' + m : m) + '-' + (d <= 9 ? '0' + d : d)
-  const datePart = req.body.date ? new Date(req.body.date).toDateString() : new Date(dateStr).toDateString()
+  const datePart = req.body.date === '' || req.body.date === undefined ? new Date(dateStr).toDateString() : new Date(req.body.date).toDateString()
+  // const datePart = req.body.date ? new Date(req.body.date).toDateString() : new Date(dateStr).toDateString()
   // const date = req.body.date === '' || req.body.date === undefined ? new Date().toDateString() : new Date(req.body.date).toDateString()
   try{
     const addNE = await addNewExercise(
