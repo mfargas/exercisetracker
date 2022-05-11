@@ -25,6 +25,7 @@ app.get('/', (req, res) => {
 
 // post with form data username, create new user
 app.post('/api/users', async (req, res, next) => {
+
   const userName = req.body.username;
   if(!userName || userName === 0 ){
     return res.json({error: 'Invalid username'})
@@ -41,6 +42,7 @@ app.post('/api/users', async (req, res, next) => {
     }
   }
 })
+
 
 // get list of all users
 app.get('/api/users', async(req, res, next) => {
