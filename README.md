@@ -52,9 +52,18 @@ Users should be able to:
 
 ### Screenshot
 
-<!-- ![Screenshot of Website](./public/result-1.png)
-Result 1
-![Result 1](./public/result-2.png) -->
+Create a new user
+![Screenshot of Website](./public/images/screen1.png)
+Result after creating new user
+![POST New User Response](./public/images/screen2.png)
+Create new exercise log
+![Create exercise](./public/images/screen3.png)
+Result after creating new exercise log
+![Exercise Log Response JSON](./public/images/screen4.png)
+Input query to search all logs into searchbar
+![Searchbar Search](./public/images/screen5.png)
+Result of a user's log entries and a count of how many entries are in their database
+![Full Log Response JSON](./public/images/screen6.png)
 
 ### Links
 
@@ -65,14 +74,136 @@ Result 1
 
 ### Built with
 
-- Semantic HTML5 markup
-- CSS custom properties
-- JavaScript with a Backend Approach
+- HTML
+- CSS
+- JavaScript
+- MongoDB
+- mongoose.js
 - [Node.js](https://nodejs.org/en/) - JS Runtime
 - [Express.js](http://expressjs.com/) - Node.js Framework
 
 
 ### What I learned
+
+To get started, I downloaded dependencies express.js, mongodb, mongoose, body-parser, cors, and dotenv. From there I created a .env file with my mongo connection tokens then referenced the dependencies at the top of my server.js file followed by:
+```
+mongoose.connect(process.env.DB, {useNewUrlParser: true, useUnifiedTopology: true}, () =>{
+  console.log('Successfully connected to DB')
+})
+```
+
+To access my images and css file, I referenced them next:
+```
+app.use(express.static('public'))
+```
+This app uses a lot of asynchronous functions from our learnings on freeCodeCamp to make these requests to the database.
+
+A separate JS file was generated to create place to hold the functions I will import into the server.js file. To add new users in the server, here is a function I added to fun.js:
+```
+const mongoose = require('mongoose');
+const {User} = require('./userSchema');
+
+const addNewUser = async (newUserName)=>{
+    try{
+        const newUser = new User({ username: newUserName})
+        const saveNewUser = await newUser.save()
+        return saveNewUser
+    } catch (err) {
+        throw new Error('User could not be saved')
+    }
+}
+```
+
+I primarily learned to create an app that uses a POST method to create a new user and checks for duplicates of the same username. This is a very basic form of an app with a user database, this is useful for learning to build apps that allow users to log in and access their accounts in future iterations of this type of web app. I plan to create a minor patient portal in the future to build on my learnings of this project.
+
+For the POST method, I used the following in server.js:
+```
+app.post('/api/users', async (req, res, next) => {
+
+  const userName = req.body.username;
+
+  if(!userName || userName === 0 ){
+    return res.json({error: 'Invalid username'})
+  } else {
+    try{
+      const newUser = await addNewUser(userName);
+      console.log(newUser)
+      res.json({
+        username: newUser.username,
+        _id: newUser._id
+      })
+    } catch(err){
+      console.error(err)
+    }
+  }
+})
+```
+
+The same can be done for the function to update a user and to add new exercises:
+```
+const findAndUpdateUser = async (userId, objWNewProps) => {
+    try{
+        const updatedUser = await User.findByIdAndUpdate(userId, 
+            {
+                $push: {exercises: objWNewProps}
+            },
+            {new: true}
+        )
+        const obj = {
+            username: updatedUser.username,
+            description: objWNewProps.description,
+            duration: objWNewProps.duration,
+            _id: userId,
+            date: objWNewProps.date
+        }
+        return obj
+    } catch (err){
+        console.error(err)
+        throw new Error('Cannot update user')
+    }
+}
+```
+
+Another function shown here is used to asynchronously update a user's overall log with a new exercise after checking a few formatting properties such as the date format. 
+
+I use an object to hold the new properties for a new exercise such as description, duration, and the date taken from the form our server references. Most of the date formatting specificities were made to satisfy the test run when submitting this project. Mainly to pass test cases #15 and #16.
+
+An Object is in the format we want when pushing to our mongodb database for the user.
+
+```
+const addNewExercise = async (exerciseDetails) => {
+    try{
+        const objWNewProps = {
+            description: exerciseDetails.description,
+            duration: exerciseDetails.duration,
+            date: exerciseDetails.date
+        }
+        if(!objWNewProps.date){
+            objWNewProps.date = new Date().toDateString()
+        } else {
+            objWNewProps.date = new Date(exerciseDetails.date).toDateString()
+        }
+        const updatedUser = await findAndUpdateUser(exerciseDetails.id, objWNewProps)
+        if(updatedUser){
+            const obj = {
+                username: updatedUser.username,
+                description: updatedUser.description,
+                duration: updatedUser.duration,
+                date: new Date(exerciseDetails.date).toDateString(),
+                _id: updatedUser._id
+            }
+            return obj
+        }else{
+            return null
+        }
+    }catch(err){
+        console.log(err)
+        throw new Error('Could not add exercise')
+    }
+}
+```
+
+Below is an example of the feedback logged onto the Mongo NoSQL Database, and this is the more extensive use of MongoDB I've worked on
 
 ```
 **Exercise:**
@@ -102,8 +233,18 @@ Result 1
 }`
 ```
 
-<!-- ### Continued development
-### Useful resources
+The functions used to create the users and exercises partner with the userSchema to generate the JSON response and update our DB. The following is placed at the top of our server.js file after all functions are created in fun.js, the userSchema is created and the proper mongoDB configuration setting are complete:
+
+```
+const { addNewUser, getAllUsers, addNewExercise, fetchExercises} = require('./js/fun')
+const { Schema } = require('mongoose')
+const mongoose = require('mongoose')
+```
+
+### Continued development
+I intend on returning to this project to also add a password protected login system for people to see a dashboard of their exercise logs.
+
+<!-- ### Useful resources
 - [req.ip](http://expressjs.com/en/5x/api.html#req.ip) - 
 - [req.get(field)](http://expressjs.com/en/5x/api.html#req.acceptsLanguages) - -->
 

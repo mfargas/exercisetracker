@@ -9,22 +9,30 @@
 
   <body>
     <div class="container">
-      <h1>Exercise tracker</h1>
-      <form action="/api/users" method="post">
-        <h3>Create a New User</h3>
-        <p><code>POST /api/users</code></p>
-        <input id="uname" type="text" name="username" placeholder="username" />
-        <input type="submit" value="Submit" />
-      </form>
-      <form id="exercise-form" method="post">
-        <h3>Add exercises</h3>
-        <p><code>POST /api/users/:_id/exercises</code></p>
-        <input id="uid" type="text" name=":_id" placeholder=":_id" />
-        <input id="desc" type="text" name="description" placeholder="description*" />
-        <input id="dur" type="text" name="duration" placeholder="duration* (mins.)" />
-        <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
-        <input type="submit" value="Submit" />
-      </form>
+      <h1>Exercise Tracker Project</h1>
+      <div class="forms">
+        <form action="/api/users" method="post" class="form">
+          <h3>Create a New User</h3>
+          <input id="uname" type="text" name="username" placeholder="username" />
+          <input type="submit" value="Submit" />
+        </form>
+        <form id="exercise-form" method="post" class="form">
+          <h3>Add exercises</h3>
+          <p><code>POST /api/users/:_id/exercises</code></p>
+          <input id="uid" type="text" name=":_id" placeholder=":_id" />
+          <input id="desc" type="text" name="description" placeholder="exercise" />
+          <input id="dur" type="text" name="duration" placeholder="duration (in minuntes)" />
+          <input id="date" type="text" name="date" placeholder="date (yyyy-mm-dd)" />
+          <input type="submit" value="Submit" />
+        </form>
+      </div>
+      <p>
+        Once you add yourself as a user, you will see a response page in JSON form with an object containing your
+        <strong>username</strong> and <strong>userId</strong> which you can use to add exercises.
+      </p>
+      <p>
+        You can also access a list of your exercise logs through querying the following:
+      </p>
       <p>
         <strong>GET user's exercise log: </strong>
         <code>GET /api/users/:_id/logs?[from][&amp;to][&amp;limit]</code>
@@ -32,6 +40,8 @@
       <p><strong>[ ]</strong> = optional</p>
       <p><strong>from, to</strong> = dates (yyyy-mm-dd); <strong>limit</strong> = number</p>
     </div>
+    <footer> Assignment by <a href="https://www.freecodecamp.org/learn/back-end-development-and-apis/back-end-development-and-apis-projects/exercise-tracker" target="_blank">freeCodeCamp</a> 
+      completed by <a href="https://www.marjoree.com" target="_blank">Marjoree E. F.</a></footer>
     <script>
       const exerciseForm = document.getElementById("exercise-form");
 
