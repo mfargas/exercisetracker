@@ -9,6 +9,7 @@ Responses should have the following structures:
 ## Table of contents
 
 - [Overview](#overview)
+  - [How to Use](#how-to-use)  
   - [The challenge](#the-challenge)
   - [Screenshot](#screenshot)
   - [Links](#links)
@@ -27,9 +28,19 @@ Build a full stack JavaScript app that is functionally similar to this:  [Exampl
 -Use our Replit starter project to complete your project.
 -Use a site builder of your choice to complete the project. Be sure to incorporate all the files from our GitHub repo.
 
+### How to Use
+Upon cloning the repository, download the necessary packages listed in package.json by running
+```
+npm i
+```
+in the terminal. To run the application in a local port, run
+```
+npm run start
+```
+
 ### The challenge
 
-Users should be able to:
+Users should be able to pass the following test cases:
 
 1. You should provide your own project, not the example URL. 
 2. You can POST to / api / users with form data username to create a new user. 
